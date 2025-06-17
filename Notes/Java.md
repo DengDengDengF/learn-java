@@ -1603,3 +1603,18 @@ try (InputStream input = new FileInputStream("lib/default.properties")) {
 
 ```
 
+### 32.日期和时间
+
+<img src="https://s2.loli.net/2024/09/30/TdGxpr6RWbD4lzN.png" alt="image.png" style="zoom:67%;" />
+
+### 33.单元测试
+
+#### 33.1 编写JUnit测试
+
+以下使用Intellij Idea测试的：
+
+Project Stucture -->设置指定文件夹为 `Tests`。
+
+编写class--->鼠标移动到class上,然后右击，再点击goto,再点击test,再点击Create New Test 自动生成测试模板了--->编写测试实现--->运行测试
+
+`tips：`测试不要忘了写入口main函数

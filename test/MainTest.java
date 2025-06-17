@@ -1,23 +1,19 @@
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 class MainTest {
 
     @Test
-    void testArithmeticException() {
-        // 期望 ArithmeticException 异常
-        assertThrows(ArithmeticException.class, () -> {
-            Main.fact(212); // 传入大于 20 的数值以触发异常
-        });
+    void fact() {
+        assertEquals(1, Main.fact(1));
+        assertEquals(2, Main.fact(2));
+        //  assertEquals(6,Main.fact(3));  //right
+        assertEquals(0,Main.fact(11));
     }
 
     @Test
-    void testIllegalArgumentException() {
-        // 期望 IllegalArgumentException 异常
-        assertThrows(IllegalArgumentException.class, () -> {
-            Main.fact(-1); // 传入负数以触发异常
-        });
+    void main() {
+        fact();
     }
 }
