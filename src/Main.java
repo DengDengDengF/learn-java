@@ -1,12 +1,10 @@
+import java.util.Arrays;
+import java.util.Random;
+
 public class Main {
-    public static long fact(long n) {
-        long r = 1;
-        for (long i = 1; i <= n; i++) {
-            r = r * i;
-        }
-        return r;
-    }
     public static void main(String[] args) {
-       System.out.println(fact(10));
+         int a=1;
+         System.out.printf("PI is approximately %-7d\n",a);
+
     }
 }
