@@ -1618,3 +1618,10 @@ Project Stucture -->设置指定文件夹为 `Tests`。
 编写class--->鼠标移动到class上,然后右击，再点击goto,再点击test,再点击Create New Test 自动生成测试模板了--->编写测试实现--->运行测试
 
 `tips：`测试不要忘了写入口main函数
+
+#### 33.2 使用Fixture
+
+`@BeforeEach` 、`@AfterEach`、`@Test`
+
+先收集所有的`@Test`方法。创建实例。`@BeforeEach` 初始化。`@Test`执行方法。`@AfterEach`清理。
+
