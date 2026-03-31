@@ -1625,3 +1625,18 @@ Project Stucture -->设置指定文件夹为 `Tests`。
 
 先收集所有的`@Test`方法。创建实例。`@BeforeEach` 初始化。`@Test`执行方法。`@AfterEach`清理。
 
+#### 33.4异常测试
+
+```java
+@Test
+void testNegative() {
+    //assertThrows捕获到IllegalArgumentException类型的异常时，通过测试
+    assertThrows(IllegalArgumentException.class, new Executable() {
+        @Override
+        public void execute() throws Throwable {
+            Factorial.fact(-1);
+        }
+    });
+}
+```
+
