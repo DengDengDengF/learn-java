@@ -1640,3 +1640,19 @@ void testNegative() {
 }
 ```
 
+#### 33.5条件测试
+
+```java
+@Disabled //禁止运行
+@Test
+void testBug101() {
+    // 这个测试不会运行
+}
+.....
+@EnabledOnOs(OS.WINDOWS) //只能在win上运行  
+@DisabledOnOs(OS.WINDOWS)//禁止在win上运行
+@DisabledOnJre(JRE.JAVA_8)//只能在java9以上运行
+....
+
+```
+
