@@ -1656,3 +1656,18 @@ void testBug101() {
 
 ```
 
+#### 33.6参数化测试
+
+```java
+@ParameterizedTest
+@ValueSource(ints = { -1, -5, -100 })
+void testAbsNegative(int x) {
+    assertEquals(-x, Math.abs(x));
+}
+-（-1) == 1
+-（-5) == 5
+-（-100) == 100    
+其他用法略
+.....
+```
+
