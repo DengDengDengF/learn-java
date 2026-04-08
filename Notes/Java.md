@@ -1709,3 +1709,23 @@ void testAbsNegative(int x) {
 | [A-F0-9xy] | 指定范围的字符       | `A`，……，`F`，`0`，……，`9`，`x`，`y` |
 | [^A-F]     | 指定范围外的任意字符 | 非`A`~`F`                            |
 | AB\|CD\|EF | AB或CD或EF           | `AB`，`CD`，`EF`                     |
+
+分组匹配：
+
+```java
+//时间匹配，(00-19|20-23):(00-59):(00-59)
+String time = "23:01:59";
+Pattern pattern = Pattern.compile("([01]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)");
+Matcher matcher = pattern.matcher(time);
+
+if (matcher.matches()) {
+     String hour = matcher.group(1);
+     String minute = matcher.group(2);
+     String second = matcher.group(3);
+
+     System.out.println("时: " + hour);
+     System.out.println("分: " + minute);
+     System.out.println("秒: " + second);
+}
+```
+
