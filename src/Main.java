@@ -3,21 +3,12 @@ import java.util.regex.*;
 
 public class Main {
     public static void main(String[] args) {
-        String time = "22:01:59";
 
-        Pattern pattern = Pattern.compile("([0-1]\\d|2[0-3]):([0-5]\\d):([0-5]\\d)");
-        Matcher matcher = pattern.matcher(time);
-
+        Pattern pattern = Pattern.compile("(\\d+?)(0*)");
+        Matcher matcher = pattern.matcher("1230000");
         if (matcher.matches()) {
-            String hour = matcher.group(1);
-            String minute = matcher.group(2);
-            String second = matcher.group(3);
-
-            System.out.println("时: " + hour);
-            System.out.println("分: " + minute);
-            System.out.println("秒: " + second);
-        }else{
-            System.out.println("not match");
+            System.out.println("group1=" + matcher.group(1)); // "1230000"
+            System.out.println("group2=" + matcher.group(2)); // ""
         }
     }
 }
