@@ -1747,3 +1747,18 @@ if (matcher.matches()) {
 反向引用 replaceAll
 ```
 
+### 35.加密与安全
+
+**1.编码算法**
+
+url编码、base64编码
+
+**2.哈希算法**
+
+哈希碰撞、MD5、加盐（HmacMD5）、SHA-1....
+
+Java.security,允许第三方提供包无缝接入，可以引入外部加密算法
+
+
+
+ 
