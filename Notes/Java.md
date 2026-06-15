@@ -1759,6 +1759,92 @@ url编码、base64编码
 
 Java.security,允许第三方提供包无缝接入，可以引入外部加密算法
 
-##### **3.加密算法**
+**3.加密算法**
 
  公钥加密私钥解密、数字证书是各种加密算法的集成....
+
+### 36*.多线程
+
+#### 1.多进程 vs 多线程
+
+和多线程相比，多进程的缺点在于：
+
+- 创建进程比创建线程开销大，尤其是在Windows系统上；
+- 进程间通信比线程间通信要慢，因为线程间通信就是读写同一个变量，速度很快。
+
+而多进程的优点在于：
+
+多进程稳定性比多线程高，因为在多进程的情况下，一个进程崩溃不会影响其他进程，而在多线程的情况下，任何一个线程崩溃会直接导致整个进程崩溃。
+
+#### 2.intellij idea多线程debugger技巧
+
+2.1 thread模式 `Cannot evaluate, current stack frame doesn't support evaluation"`
+
+```java
+// 多线程
+public class Main {
+    public static void main(String[] args) {
+        Thread t = new Thread(() -> {
+            //打断点，susepend thread**
+            String message = "start new thread!";
+            System.out.println(message);
+        }, "Thread-1");
+        t.start(); // 启动新线程
+        Thread t2 = new Thread(() -> {
+            //打断点，suspend thread**
+            String message = "start new thread2!";
+            System.out.println(message);
+        }, "Thread-2");
+        t2.start(); // 启动新线程
+        System.out.println('a');
+        System.out.println('b');
+        System.out.println('c');
+        System.out.println('d');
+        System.out.println('e');
+    }
+}
+```
+
+均是thread模式。切到线程2，一只向下走，直到结束，报错`Cannot evaluate, current stack frame doesn't support evaluation"`，无法继续切回线程1。分析：
+
+不是死锁，`线程1`只是被 debugger 挂起。`线程2`执行结束后，IDEA 可能丢失当前调试上下文，导致切回`线程1`异常。多线程调试时不要等某个线程执行完再切换，应该保持线程暂停状态进行切换。
+
+2.2 thread 和 all 的区别
+
+| 模式       | 断点命中时                     | 其他线程有断点时               | 典型使用场景                                                 |
+| ---------- | ------------------------------ | ------------------------------ | ------------------------------------------------------------ |
+| **Thread** | 只有命中线程暂停，其他继续运行 | 其他线程跑到断点也会暂停       | 调试并发问题、锁竞争、线程间协作、观察其他线程在当前线程停住时会做什么 |
+| **All**    | 所有线程立即全部暂停           | 所有线程已经暂停，不会跑到断点 | 查看稳定现场、检查共享变量状态、分析调用栈、排查死锁、获取某一时刻系统全貌 |
+
+```java
+//测试代码，
+public class Main {
+    public static void main(String[] args) {
+        Thread t1 = new Thread(() -> {
+            while (true) {
+                System.out.println("t1 running");  // 断点1
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        Thread t2 = new Thread(() -> {
+            while (true) {
+                System.out.println("t2 running");  // 断点2
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        t1.start();
+        t2.start();
+    }
+}
+```
+
