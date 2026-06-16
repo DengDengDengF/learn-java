@@ -1848,3 +1848,100 @@ public class Main {
 }
 ```
 
+#### 3.线程的状态
+
+Java线程的状态有以下几种：
+
+- New：新创建的线程，尚未执行；
+
+- Runnable：运行中的线程，正在执行`run()`方法的Java代码；
+
+- Blocked：运行中的线程，因为某些操作被阻塞而挂起；
+
+- Waiting：运行中的线程，因为某些操作在等待中；
+
+- Timed Waiting：运行中的线程，因为执行`sleep()`方法正在计时等待；
+
+- Terminated：线程已终止，因为`run()`方法执行完毕。
+
+  `BLOCKED` 和 `WAITING`和`TIMED_WAITING` 最大区别：
+
+  > **BLOCKED 是“想运行，但进不去”-等锁**
+  > **WAITING 是“进去了，但主动停下来等别人”-主动等待**
+  >
+  > **TIMED_WAITING是"最多等多久，事件到了自己恢复"**
+
+```java
+// 中断线程
+public class Main {
+    public static void main(String[] args) throws InterruptedException {
+        Thread t = new MyThread();
+        t.start();
+        Thread.sleep(1000);
+        t.interrupt(); // 中断t线程
+        t.join(); // 等待t线程结束
+        System.out.println("end");
+    }
+}
+
+class MyThread extends Thread {
+    public void run() {
+        Thread hello = new HelloThread();
+        hello.start(); // 启动hello线程
+        try {
+            hello.join(); // 等待hello线程结束
+        } catch (InterruptedException e) {
+            System.out.println("interrupted!");
+        }
+        hello.interrupt();
+    }
+}
+
+class HelloThread extends Thread {
+    public void run() {
+        int n = 0;
+        while (!isInterrupted()) {
+            n++;
+            System.out.println(n + " hello!");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("interrupted2!");
+                break;
+            }
+        }
+    }
+}
+
+```
+
+**只有调用 `sleep()`、`join()`、`wait()` 这类可响应中断的方法时，线程处于阻塞状态，并且被其他线程调用 `interrupt()`，才会抛出 `InterruptedException`。**
+
+其他方法用`共享内存标志位`
+
+```java
+// 中断线程
+public class Main {
+    public static void main(String[] args)  throws InterruptedException {
+        HelloThread t = new HelloThread();
+        t.start();
+        Thread.sleep(1);
+        t.running = false; // 标志位置为false
+    }
+}
+
+class HelloThread extends Thread {
+    public volatile boolean running = true; //violatile关键字，总是获取主内存最新值，被修改后，立刻回写到主内存，确保一致性。
+    public void run() {
+        int n = 0;
+        while (running) {
+            n ++;
+            System.out.println(n + " hello!");
+        }
+        System.out.println("end!");
+    }
+}
+
+```
+
+tips：用js实现`多线程磁盘读取速率控制器`中，令牌桶的设计用到了共享内存，最终因为浏览器安全策略域名兼容等问题撤掉了。

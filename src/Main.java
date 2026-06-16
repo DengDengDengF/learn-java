@@ -1,28 +1,40 @@
+// 中断线程
 public class Main {
-    public static void main(String[] args) {
-        Thread t1 = new Thread(() -> {
-            while (true) {
-                System.out.println("t1 running");  // 断点1
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+    public static void main(String[] args) throws InterruptedException {
+        Thread t = new MyThread();
+        t.start();
+        Thread.sleep(1000);
+        t.interrupt(); // 中断t线程
+        t.join(); // 等待t线程结束
+        System.out.println("end");
+    }
+}
 
-        Thread t2 = new Thread(() -> {
-            while (true) {
-                System.out.println("t2 running");  // 断点2
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+class MyThread extends Thread {
+    public void run() {
+        Thread hello = new HelloThread();
+        hello.start(); // 启动hello线程
+        try {
+            hello.join(); // 等待hello线程结束
+        } catch (InterruptedException e) {
+            System.out.println("interrupted!");
+        }
+        hello.interrupt();
+    }
+}
 
-        t1.start();
-        t2.start();
+class HelloThread extends Thread {
+    public void run() {
+        int n = 0;
+        while (!isInterrupted()) {
+            n++;
+            System.out.println(n + " hello!");
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                System.out.println("interrupted2!");
+                break;
+            }
+        }
     }
 }
