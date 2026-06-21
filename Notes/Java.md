@@ -1765,7 +1765,7 @@ Java.security,允许第三方提供包无缝接入，可以引入外部加密算
 
 ### 36*.多线程
 
-#### 1.多进程 vs 多线程
+#### 36.1 多进程 vs 多线程
 
 和多线程相比，多进程的缺点在于：
 
@@ -1776,9 +1776,9 @@ Java.security,允许第三方提供包无缝接入，可以引入外部加密算
 
 多进程稳定性比多线程高，因为在多进程的情况下，一个进程崩溃不会影响其他进程，而在多线程的情况下，任何一个线程崩溃会直接导致整个进程崩溃。
 
-#### 2.intellij idea多线程debugger技巧
+#### 36.2 intellij idea多线程debugger技巧
 
-2.1 thread模式 `Cannot evaluate, current stack frame doesn't support evaluation"`
+1 thread模式 `Cannot evaluate, current stack frame doesn't support evaluation"`
 
 ```java
 // 多线程
@@ -1809,7 +1809,7 @@ public class Main {
 
 不是死锁，`线程1`只是被 debugger 挂起。`线程2`执行结束后，IDEA 可能丢失当前调试上下文，导致切回`线程1`异常。多线程调试时不要等某个线程执行完再切换，应该保持线程暂停状态进行切换。
 
-2.2 thread 和 all 的区别
+2 thread 和 all 的区别
 
 | 模式       | 断点命中时                     | 其他线程有断点时               | 典型使用场景                                                 |
 | ---------- | ------------------------------ | ------------------------------ | ------------------------------------------------------------ |
@@ -1848,7 +1848,7 @@ public class Main {
 }
 ```
 
-#### 3.线程的状态
+#### 36.3 线程的状态
 
 Java线程的状态有以下几种：
 
@@ -1945,3 +1945,67 @@ class HelloThread extends Thread {
 ```
 
 tips：用js实现`多线程磁盘读取速率控制器`中，令牌桶的设计用到了共享内存，最终因为浏览器安全策略域名兼容等问题撤掉了。
+
+#### 36.4 守护线程
+
+守护线程是指为其他线程服务的线程。在JVM中，所有非守护线程都执行完毕后，无论有没有守护线程，虚拟机都会自动退出。
+
+```java
+Thread t = new MyThread();//这里面是个无限循环  while（true）{} ,这个线程不结束，jvm进程就不发结束。
+t.setDaemon(true);//守护线程，不能持有需要关闭的资源（如打开文件等）
+t.start();
+```
+
+#### 36.5 线程同步
+
+##### 36.5.1 synchronized
+
+`synchronized`关键字，锁对象。
+
+```java
+class Counter {
+    private int count = 0;
+    private final Object lock = new Object();  // 私有锁
+    
+    public void add() {
+        synchronized (lock) {  // 锁的是 lock，不是 this
+            count++;
+        }
+    }
+}
+
+// 使用
+Counter c = new Counter();
+new Thread(() -> c.add()).start();  // 锁的是 lock
+// 外部无法用 synchronized(c) 干扰，更安全
+```
+
+锁实例
+
+```java
+class Counter {
+    private int count = 0;
+    
+    // 方式1：同步方法
+    public synchronized void add() {
+        count++;
+    }
+    
+    // 方式2：同步块锁 this（等价于方式1）
+    public void add2() {
+        synchronized (this) {
+            count++;
+        }
+    }
+}
+
+// 使用
+Counter c = new Counter();
+new Thread(() -> c.add()).start();   // 锁的是 c
+new Thread(() -> c.add2()).start();  // 锁的也是 c，互斥 ✅
+```
+
+涉及到读写的一致性，考虑加锁。
+
+
+

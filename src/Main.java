@@ -1,39 +1,59 @@
-// 中断线程
+// 多线程
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        Thread t = new MyThread();
-        t.start();
-        Thread.sleep(1000);
-        t.interrupt(); // 中断t线程
-        t.join(); // 等待t线程结束
-        System.out.println("end");
-    }
-}
-
-class MyThread extends Thread {
-    public void run() {
-        Thread hello = new HelloThread();
-        hello.start(); // 启动hello线程
-        try {
-            hello.join(); // 等待hello线程结束
-        } catch (InterruptedException e) {
-            System.out.println("interrupted!");
+    public static void main(String[] args) throws Exception {
+        var ts = new Thread[] { new AddStudentThread(), new DecStudentThread(), new AddTeacherThread(), new DecTeacherThread() };
+        for (var t : ts) {
+            t.start();
         }
-        hello.interrupt();
+        for (var t : ts) {
+            t.join();
+        }
+        System.out.println(Counter.studentCount);
+        System.out.println(Counter.teacherCount);
     }
 }
 
-class HelloThread extends Thread {
+class Counter {
+    public static final Object lock = new Object();
+    public static int studentCount = 0;
+    public static int teacherCount = 0;
+}
+
+class AddStudentThread extends Thread {
     public void run() {
-        int n = 0;
-        while (!isInterrupted()) {
-            n++;
-            System.out.println(n + " hello!");
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                System.out.println("interrupted2!");
-                break;
+        for (int i=0; i<10000; i++) {
+            synchronized(Counter.lock) {
+                Counter.studentCount += 1;
+            }
+        }
+    }
+}
+
+class DecStudentThread extends Thread {
+    public void run() {
+        for (int i=0; i<10000; i++) {
+            synchronized(Counter.lock) {
+                Counter.studentCount -= 1;
+            }
+        }
+    }
+}
+
+class AddTeacherThread extends Thread {
+    public void run() {
+        for (int i=0; i<10000; i++) {
+            synchronized(Counter.lock) {
+                Counter.teacherCount += 1;
+            }
+        }
+    }
+}
+
+class DecTeacherThread extends Thread {
+    public void run() {
+        for (int i=0; i<10000; i++) {
+            synchronized(Counter.lock) {
+                Counter.teacherCount -= 1;
             }
         }
     }
