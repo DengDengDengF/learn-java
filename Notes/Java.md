@@ -2007,5 +2007,46 @@ new Thread(() -> c.add2()).start();  // 锁的也是 c，互斥 ✅
 
 涉及到读写的一致性，考虑加锁。
 
+##### 36.5.2 volatile
 
+```java
+public class TaskRunner {
+    private volatile boolean running = true;
+    private final List<String> tasks = new ArrayList<>();
+    
+    // 停止信号 - 利用 volatile 的可见性
+    public void stop() {
+        running = false;
+    }
+    
+    // 添加任务 - 需要同步保护集合操作
+    public synchronized void addTask(String task) {
+        tasks.add(task);
+    }
+    
+    // 执行任务 - 结合两者
+    public void execute() {
+        while (running) {  // volatile 保证能及时看到停止信号
+            String task = null;
+            
+            synchronized (this) {  // 同步保护集合操作
+                if (!tasks.isEmpty()) {
+                    task = tasks.remove(0);
+                }
+            }
+            
+            if (task != null) {
+                process(task);
+            }
+        }
+    }
+    
+    private void process(String task) {
+        System.out.println("Processing: " + task);
+    }
+}
+
+```
+
+ 各司其职: volatile 管可见性,synchronized 管原子性
 
