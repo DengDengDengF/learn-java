@@ -2050,3 +2050,30 @@ public class TaskRunner {
 
  各司其职: volatile 管可见性,synchronized 管原子性
 
+##### 36.5.3  死锁
+
+```java
+public void add(int m) {
+    synchronized(lockA) { // 获得lockA的锁
+        this.value += m;
+        synchronized(lockB) { // 获得lockB的锁
+            this.another += m;
+        } // 释放lockB的锁
+    } // 释放lockA的锁
+}
+
+public void dec(int m) {
+    synchronized(lockB) { // 获得lockB的锁
+        this.another -= m;
+        synchronized(lockA) { // 获得lockA的锁
+            this.value -= m;
+        } // 释放lockA的锁
+    } // 释放lockB的锁
+}
+```
+
+add 获取 lockA锁，dec获取lockB锁；
+
+add等lockB释放，dec等lockA释放，产生死锁。
+
+解决方案：都按照先lockA在lockB顺序。
