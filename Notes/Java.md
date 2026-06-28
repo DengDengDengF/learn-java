@@ -2077,3 +2077,40 @@ add 获取 lockA锁，dec获取lockB锁；
 add等lockB释放，dec等lockA释放，产生死锁。
 
 解决方案：都按照先lockA在lockB顺序。
+
+##### 36.5.4 wait 和 notify
+
+正确用法如下：
+
+```java
+class TaskQueue {
+    Queue<String> queue = new LinkedList<>();
+
+    public synchronized void addTask(String s) {
+        this.queue.add(s);
+        this.notifyAll();
+    }
+
+    public synchronized String getTask() throws InterruptedException {
+        while (queue.isEmpty()) {
+            //释放this锁:
+            this.wait();
+            //重新获取this锁
+        }
+        return queue.remove();
+    }
+}
+
+```
+
+如果：
+
+```java
+public synchronized String getTask() {
+        while (queue.isEmpty()) {
+        }
+        return queue.remove();
+}
+```
+
+会导致addTask一直拿不到锁。
