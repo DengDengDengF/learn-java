@@ -2114,3 +2114,70 @@ public synchronized String getTask() {
 ```
 
 会导致addTask一直拿不到锁。
+
+##### 36.5.5 ReentrantLock
+
+```java
+public class Counter {
+    private final Lock lock = new ReentrantLock();
+    private int count;
+
+    public void add(int n) {
+        lock.lock();
+        try {
+            count += n;
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+```
+
+或者
+
+```java
+if (lock.tryLock(1, TimeUnit.SECONDS)) { //最多等一秒去获取锁
+    try {
+        ...
+    } finally {
+        lock.unlock();
+    }
+}
+```
+
+`synchronized` 是 JVM 层面的锁。
+
+`ReentrantLock` 是 Java API 层面的锁，高级控制（超时）用 它。
+
+##### 36.5.6 ReentrantLock + Condition
+
+```java
+class TaskQueue {
+    private final Lock lock = new ReentrantLock();
+    private final Condition condition = lock.newCondition();
+    private Queue<String> queue = new LinkedList<>();
+
+    public void addTask(String s) {
+        lock.lock();
+        try {
+            queue.add(s);
+            condition.signalAll();//唤醒所有等待线程
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public String getTask() {
+        lock.lock();
+        try {
+            while (queue.isEmpty()) {
+                condition.await();
+            }
+            return queue.remove();
+        } finally {
+            lock.unlock();
+        }
+    }
+}
+
+```
