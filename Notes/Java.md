@@ -2181,3 +2181,110 @@ class TaskQueue {
 }
 
 ```
+
+##### 36.5.7，读写锁
+
+多线程同时读，只允许一个线程写
+
+```java
+public class Counter {
+    private int[] counts = new int[10];
+    // 当前正在读的线程数量
+    // 多个读线程可以同时读，所以需要记录数量
+    private int reading = 0;
+    // 是否有写线程正在执行
+    // 写是独占的，只允许一个线程写
+    private boolean writing = false;
+    public void inc(int index) {
+        // 获取写权限
+        synchronized (this) {
+            // 当前对象锁保护 writing 和 reading 状态
+            //
+            // 如果：
+            // 1. 有读线程正在读
+            // 2. 已经有其他写线程正在写
+            //
+            // 当前写线程等待
+            while (reading > 0 || writing) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            // 标记自己获得写权限
+            // 后续其他读线程看到 writing=true 会等待
+            // 其他写线程也会等待
+            writing = true;
+        }
+        // 真正写数据
+        // 这里没有 synchronized
+        // 因为上面 writing=true 已经保证：
+        // 1. 没有读线程
+        // 2. 没有其他写线程
+        //
+        // 所以当前线程可以独占修改 counts
+        try {
+            counts[index]++;
+        } finally {
+            // 释放写权限
+            // synchronized(this) 的作用：
+            // 1. 保证 writing=false 修改安全
+            // 2. 保证 notifyAll() 合法调用
+            // 3. 防止其他线程看到错误的 writing 状态
+            synchronized (this) {
+                writing = false;
+                // 唤醒等待的读线程和写线程
+                // 让它们重新竞争锁
+                notifyAll();
+            }
+        }
+    }
+
+
+
+    public int[] get() {
+        // 获取读权限
+        synchronized (this) {
+            // 如果当前有写线程
+            // 说明 counts 正在修改
+            // 当前读线程等待
+            while (writing) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+            // 注册一个读线程
+            // 作用：
+            // 告诉写线程：
+            // "现在有人正在读，不允许写"
+            reading++;
+        }
+        // 真正读数据
+        // 这里没有 synchronized
+        //
+        // 所以多个读线程可以同时执行
+        try {
+            return Arrays.copyOf(counts, counts.length);
+        } finally {
+            // 注销读线程
+            // 必须加 synchronized
+            // 因为多个读线程可能同时结束，
+            // reading-- 必须保证线程安全
+            synchronized (this) {
+                reading--;
+                // 最后一个读线程离开
+                // 说明现在没有读者了
+                // 可以唤醒等待写线程
+                if (reading == 0) {
+                    notifyAll();
+                }
+            }
+        }
+    }
+}
+```
+
+写的有些复杂，如果有库能实现最好
