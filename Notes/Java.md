@@ -2323,3 +2323,112 @@ public class Counter {
 - `ReadWriteLock`只允许一个线程写入；
 - `ReadWriteLock`允许多个线程在没有写入时同时读取；
 - `ReadWriteLock`适合读多写少的场景。
+
+##### 36.5.8 StampedLock 乐观锁 + 悲观锁
+
+真正的CAS乐观锁，自旋锁。
+
+```java
+import java.util.concurrent.atomic.AtomicInteger;
+public class Counter {
+    // AtomicInteger 底层就是 CAS
+    private final AtomicInteger count = new AtomicInteger(0);
+    /**
+     * 自增
+     */
+    public void inc() {
+        while (true) {
+            // 读取旧值
+            int oldValue = count.get();
+            // 计算新值
+            int newValue = oldValue + 1;
+            // CAS
+            // 如果 count 仍然是 oldValue，就改成 newValue
+            if (count.compareAndSet(oldValue, newValue)) {
+                return;
+            }
+            // 有人已经修改了
+            // CAS失败
+            // 继续循环重试
+        }
+    }
+    /**
+     * 获取值
+     */
+    public int get() {
+        return count.get();
+    }
+}
+```
+
+版本号乐观锁，synchronized、AtomicInteger
+
+```java
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicInteger;
+public class Counter {
+    private int[] counts = new int[10];
+    // 数据版本
+    private final AtomicInteger version = new AtomicInteger();
+    public void inc(int index) {
+        synchronized (this) {
+            counts[index]++;
+            version.incrementAndGet();
+        }
+    }
+    public int[] get() {
+        while (true) {
+            int v1 = version.get();
+            int[] copy = Arrays.copyOf(counts, counts.length);
+            int v2 = version.get();
+            if (v1 == v2) {
+                return copy;
+            }
+            // 有人修改了
+            // 重试
+        }
+    }
+}
+```
+
+调库。
+
+```java
+public class Point {
+    private final StampedLock stampedLock = new StampedLock();
+    private double x;
+    private double y;
+    public void move(double deltaX, double deltaY) {
+        long stamp = stampedLock.writeLock(); // 获取写锁
+        try {
+            x += deltaX;
+            y += deltaY;
+        } finally {
+            stampedLock.unlockWrite(stamp); // 释放写锁
+        }
+    }
+
+    public double distanceFromOrigin() {
+        long stamp = stampedLock.tryOptimisticRead(); // 获得一个乐观读锁
+        // 注意下面两行代码不是原子操作
+        // 假设x,y = (100,200)
+        double currentX = x;
+        // 此处已读取到x=100，但x,y可能被写线程修改为(300,400)
+        double currentY = y;
+        // 此处已读取到y，如果没有写入，读取是正确的(100,200)
+        // 如果有写入，读取是错误的(100,400)
+        if (!stampedLock.validate(stamp)) { // 检查乐观读锁后是否有其他写锁发生
+            stamp = stampedLock.readLock(); // 获取一个悲观读锁，把写入锁住
+            try {
+                currentX = x;
+                currentY = y;
+            } finally {
+                stampedLock.unlockRead(stamp); // 释放悲观读锁
+            }
+        }
+        return Math.sqrt(currentX * currentX + currentY * currentY);
+    }
+}
+```
+
+使用场景：大部分情况下，读写不会冲突，即使冲突了，二次读写成本也不高。
