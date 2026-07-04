@@ -2161,9 +2161,9 @@ class TaskQueue {
         lock.lock();
         try {
             queue.add(s);
-            condition.signalAll();//唤醒所有等待线程
+            condition.signalAll();//`唤醒`所有等待线程
         } finally {
-            lock.unlock();
+            lock.unlock();//'放行'
         }
     }
 
@@ -2487,3 +2487,12 @@ if (semaphore.tryAcquire(3, TimeUnit.SECONDS)) {
 }
 ```
 
+##### 36.5.10.使用Concurrent集合
+
+| interface | non-thread-safe         | thread-safe                              |
+| --------- | ----------------------- | ---------------------------------------- |
+| List      | ArrayList               | CopyOnWriteArrayList                     |
+| Map       | HashMap                 | ConcurrentHashMap                        |
+| Set       | HashSet / TreeSet       | CopyOnWriteArraySet                      |
+| Queue     | ArrayDeque / LinkedList | ArrayBlockingQueue / LinkedBlockingQueue |
+| Deque     | ArrayDeque / LinkedList | LinkedBlockingDeque                      |
