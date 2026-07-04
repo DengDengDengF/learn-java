@@ -2432,3 +2432,58 @@ public class Point {
 ```
 
 使用场景：大部分情况下，读写不会冲突，即使冲突了，二次读写成本也不高。
+
+##### 36.5.9Semaphore 限制线程并发数量
+
+可以利用 `wait()/notifyAll()`：
+
+```java
+public class AccessLimitControl {
+    private int permits = 3;
+    public String access() throws InterruptedException {
+        synchronized (this) {
+            while (permits == 0) {
+                wait();
+            }
+            permits--;
+        }
+        try {
+            return UUID.randomUUID().toString();
+        } finally {
+            synchronized (this) {
+                permits++;
+                notifyAll();
+            }
+        }
+    }
+}
+```
+
+或者调库
+
+```java
+public class AccessLimitControl {
+    // 任意时刻仅允许最多3个线程获取许可:
+    final Semaphore semaphore = new Semaphore(3);
+    public String access() throws Exception {
+        // 如果超过了许可数量,其他线程将在此等待:
+        semaphore.acquire();
+        try {
+            // TODO:
+            return UUID.randomUUID().toString();
+        } finally {
+            semaphore.release();
+        }
+    }
+}
+//或者加入超时等待
+if (semaphore.tryAcquire(3, TimeUnit.SECONDS)) {
+    // 指定等待时间3秒内获取到许可:
+    try {
+        // TODO:
+    } finally {
+        semaphore.release();
+    }
+}
+```
+
