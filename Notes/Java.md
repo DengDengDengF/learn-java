@@ -2149,6 +2149,17 @@ if (lock.tryLock(1, TimeUnit.SECONDS)) { //最多等一秒去获取锁
 
 `ReentrantLock` 是 Java API 层面的锁，高级控制（超时）用 它。
 
+| 能力                   | `synchronized` | `ReentrantLock`                 |
+| ---------------------- | -------------- | ------------------------------- |
+| 自动释放锁             | ✅              | ❌（需 `finally` 中 `unlock()`） |
+| 尝试获取锁             | ❌              | ✅ `tryLock()`                   |
+| 超时等待               | ❌              | ✅ `tryLock(timeout)`            |
+| 可中断等待             | ❌              | ✅ `lockInterruptibly()`         |
+| 公平锁                 | ❌              | ✅                               |
+| 多个等待条件           | ❌              | ✅ `Condition`                   |
+| 指定唤醒哪类线程       | ❌              | ✅                               |
+| 更适合构建复杂并发组件 | 一般           | ✅                               |
+
 ##### 36.5.6 ReentrantLock + Condition
 
 ```java
@@ -2496,3 +2507,18 @@ if (semaphore.tryAcquire(3, TimeUnit.SECONDS)) {
 | Set       | HashSet / TreeSet       | CopyOnWriteArraySet                      |
 | Queue     | ArrayDeque / LinkedList | ArrayBlockingQueue / LinkedBlockingQueue |
 | Deque     | ArrayDeque / LinkedList | LinkedBlockingDeque                      |
+
+##### 36.5.11 各种锁总结
+
+| 概念                    | 是什么                          | 是否加锁  | 是否阻塞线程 | 冲突处理           | 典型实现                        | 适用场景               |
+| ----------------------- | ------------------------------- | --------- | ------------ | ------------------ | ------------------------------- | ---------------------- |
+| **CAS**                 | 一种原子操作（Compare-And-Set） | ❌         | ❌            | 自旋重试           | CPU 指令 + `Unsafe`/`VarHandle` | 原子变量、无锁数据结构 |
+| **乐观锁**              | 一种并发思想：先操作，最后检查  | ❌（通常） | ❌            | 重试或失败         | CAS、版本号                     | 冲突少                 |
+| **悲观锁**              | 一种并发思想：先加锁再操作      | ✅         | ✅            | 等待锁释放         | `synchronized`、`ReentrantLock` | 冲突多                 |
+| **`synchronized`**      | Java 内置锁                     | ✅         | ✅            | JVM 管理锁         | Monitor（对象监视器）           | 简单同步               |
+| **`ReentrantLock`**     | JDK 提供的可重入锁              | ✅         | ✅            | AQS 队列           | `Lock` 接口                     | 更复杂的同步           |
+| **`AtomicInteger`**     | 原子变量                        | ❌         | ❌            | CAS 自旋           | CAS                             | 简单计数器             |
+| **`ConcurrentHashMap`** | 高并发 Map                      | 部分      | 部分         | CAS + 锁           | CAS + `synchronized`            | 高并发 Map             |
+| **`BlockingQueue`**     | 阻塞队列                        | ✅         | ✅            | `await()/signal()` | `ReentrantLock` + `Condition`   | 生产者-消费者          |
+
+所有`自旋`都应该用于预计`等待时间很短`的场景
