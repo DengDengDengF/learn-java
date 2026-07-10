@@ -2547,3 +2547,45 @@ public int incrementAndGet(AtomicInteger var) {
 | **让出CPU（Yield）**      | ⭐⭐      | 可能         | `Thread.yield()`                                          | 很少使用              |
 | **睡眠（Sleep）**         | ⭐       | ✅            | `Thread.sleep()`                                          | 定时等待              |
 | **等待通知（Wait/Park）** | ⭐       | ✅            | `wait()`、`park()`                                        | 等事件发生            |
+
+#### 36.5.6 线程池
+
+- FixedThreadPool：线程数固定的线程池；
+
+- CachedThreadPool：线程数根据任务动态调整的线程池；
+
+- SingleThreadExecutor：仅单线程执行的线程池。
+
+- ScheduledThreadPool：线程池定时执行
+
+  具体细节，略。
+
+  之所以使用线程池，是因为创建和销毁操作系统线程的成本较高。通过复用线程，可以减少线程创建、销毁和调度带来的开销，从而提高系统性能和资源利用率。
+
+#### 36.5.7 Future 得到异步执行结果
+
+```java
+class Task implements Callable<String> {
+    public String call() throws Exception {
+        return longTimeCalculation(); //某长时间执行的函数，返回String 
+    }
+}
+ExecutorService executor = Executors.newFixedThreadPool(4); 
+// 定义任务:
+Callable<String> task = new Task();
+// 提交任务并获得Future:
+Future<String> future = executor.submit(task);//因为 ExecutorService 专门提供了 submit(Callable<T>) 这个重载方法。可以识别Callable
+// 从Future获取异步执行返回的结果:
+String result = future.get(); // 可能阻塞
+```
+
+
+
+
+
+
+
+
+
+
+

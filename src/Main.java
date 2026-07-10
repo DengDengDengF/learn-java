@@ -1,60 +1,32 @@
-// 多线程
+// thread-pool
+import java.util.concurrent.*;
+
 public class Main {
-    public static void main(String[] args) throws Exception {
-        var ts = new Thread[] { new AddStudentThread(), new DecStudentThread(), new AddTeacherThread(), new DecTeacherThread() };
-        for (var t : ts) {
-            t.start();
+    public static void main(String[] args) {
+        // 创建一个固定大小的线程池:
+        ExecutorService es = Executors.newFixedThreadPool(4);
+        for (int i = 0; i < 6; i++) {
+            es.submit(new Task("" + i));
         }
-        for (var t : ts) {
-            t.join();
-        }
-        System.out.println(Counter.studentCount);
-        System.out.println(Counter.teacherCount);
+        // 关闭线程池:
+        es.shutdown();
     }
 }
 
-class Counter {
-    public static final Object lock = new Object();
-    public static int studentCount = 0;
-    public static int teacherCount = 0;
-}
+class Task implements Runnable {
+    private final String name;
 
-class AddStudentThread extends Thread {
-    public void run() {
-        for (int i=0; i<10000; i++) {
-            synchronized(Counter.lock) {
-                Counter.studentCount += 1;
-            }
-        }
+    public Task(String name) {
+        this.name = name;
     }
-}
 
-class DecStudentThread extends Thread {
+    @Override
     public void run() {
-        for (int i=0; i<10000; i++) {
-            synchronized(Counter.lock) {
-                Counter.studentCount -= 1;
-            }
+        System.out.println("start task " + name);
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
         }
-    }
-}
-
-class AddTeacherThread extends Thread {
-    public void run() {
-        for (int i=0; i<10000; i++) {
-            synchronized(Counter.lock) {
-                Counter.teacherCount += 1;
-            }
-        }
-    }
-}
-
-class DecTeacherThread extends Thread {
-    public void run() {
-        for (int i=0; i<10000; i++) {
-            synchronized(Counter.lock) {
-                Counter.teacherCount -= 1;
-            }
-        }
+        System.out.println("end task " + name);
     }
 }
