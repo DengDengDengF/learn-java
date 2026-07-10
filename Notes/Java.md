@@ -2508,7 +2508,23 @@ if (semaphore.tryAcquire(3, TimeUnit.SECONDS)) {
 | Queue     | ArrayDeque / LinkedList | ArrayBlockingQueue / LinkedBlockingQueue |
 | Deque     | ArrayDeque / LinkedList | LinkedBlockingDeque                      |
 
-##### 36.5.11 各种锁总结
+##### 36.5.11 Atomic
+
+```java
+Atomic类是通过无锁（lock-free）的方式实现的线程安全（thread-safe）访问。它的主要原理是利用了CAS：Compare and Set。
+public int incrementAndGet(AtomicInteger var) {
+    int prev, next;
+    do {
+        prev = var.get();
+        next = prev + 1;
+    } while ( ! var.compareAndSet(prev, next)); //当前值是prev，那么就更新为next，返回true；反之啥也不做，返回false。继续自旋。
+    return next;
+}
+```
+
+##### 36.5.12 各种锁总结、性能分析
+
+1.锁
 
 | 概念                    | 是什么                          | 是否加锁  | 是否阻塞线程 | 冲突处理           | 典型实现                        | 适用场景               |
 | ----------------------- | ------------------------------- | --------- | ------------ | ------------------ | ------------------------------- | ---------------------- |
@@ -2521,4 +2537,13 @@ if (semaphore.tryAcquire(3, TimeUnit.SECONDS)) {
 | **`ConcurrentHashMap`** | 高并发 Map                      | 部分      | 部分         | CAS + 锁           | CAS + `synchronized`            | 高并发 Map             |
 | **`BlockingQueue`**     | 阻塞队列                        | ✅         | ✅            | `await()/signal()` | `ReentrantLock` + `Condition`   | 生产者-消费者          |
 
-所有`自旋`都应该用于预计`等待时间很短`的场景
+2.线程等待策略
+
+| 等待方式                  | CPU占用 | 是否切换线程 | 典型API                                                   | 适用场景              |
+| ------------------------- | ------- | ------------ | --------------------------------------------------------- | --------------------- |
+| **自旋（Spin）**          | ⭐⭐⭐⭐⭐   | ❌            | CAS、AtomicInteger                                        | 等待极短（纳秒~微秒） |
+| **阻塞（Block/Park）**    | ⭐       | ✅            | `synchronized`、`LockSupport.park()`、`Condition.await()` | 等待较长              |
+| **忙等（Busy Waiting）**  | ⭐⭐⭐⭐⭐   | ❌            | `while(flag){}`                                           | 一般不推荐            |
+| **让出CPU（Yield）**      | ⭐⭐      | 可能         | `Thread.yield()`                                          | 很少使用              |
+| **睡眠（Sleep）**         | ⭐       | ✅            | `Thread.sleep()`                                          | 定时等待              |
+| **等待通知（Wait/Park）** | ⭐       | ✅            | `wait()`、`park()`                                        | 等事件发生            |
