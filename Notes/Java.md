@@ -1809,6 +1809,8 @@ public class Main {
 
 不是死锁，`线程1`只是被 debugger 挂起。`线程2`执行结束后，IDEA 可能丢失当前调试上下文，导致切回`线程1`异常。多线程调试时不要等某个线程执行完再切换，应该保持线程暂停状态进行切换。
 
+技巧:下一步、下一步、当前任务结束了就 Resume，让线程池去调度下一个任务。
+
 2 thread 和 all 的区别
 
 | 模式       | 断点命中时                     | 其他线程有断点时               | 典型使用场景                                                 |
@@ -2579,13 +2581,70 @@ Future<String> future = executor.submit(task);//因为 ExecutorService 专门提
 String result = future.get(); // 可能阻塞
 ```
 
+#### 36.5.8 CompletableFuture 自动调用回掉对象的回掉方法
 
+并行执行，执行回掉函数。
 
+```java
+// CompletableFuture
+import java.util.concurrent.CompletableFuture;
 
+public class Main {
+    public static void main(String[] args) throws Exception {
+        // 两个CompletableFuture`并行执行`异步查询:
+        CompletableFuture<String> cfQueryFromSina = CompletableFuture.supplyAsync(() -> {
+            return queryCode("中国石油", "https://finance.sina.com.cn/code/");
+        });
+        CompletableFuture<String> cfQueryFrom163 = CompletableFuture.supplyAsync(() -> {
+            return queryCode("中国石油", "https://money.163.com/code/");
+        });
 
+        // 用anyOf合并为一个新的CompletableFuture:`谁快用谁`
+        CompletableFuture<Object> cfQuery = CompletableFuture.anyOf(cfQueryFromSina, cfQueryFrom163);
 
+        // 两个CompletableFuture`并行执行`异步查询:
+        CompletableFuture<Double> cfFetchFromSina = cfQuery.thenApplyAsync((code) -> {
+            return fetchPrice((String) code, "https://finance.sina.com.cn/price/");
+        });
+        CompletableFuture<Double> cfFetchFrom163 = cfQuery.thenApplyAsync((code) -> {
+            return fetchPrice((String) code, "https://money.163.com/price/");
+        });
 
+        // 用anyOf合并为一个新的CompletableFuture:`谁快用谁`
+        CompletableFuture<Object> cfFetch = CompletableFuture.anyOf(cfFetchFromSina, cfFetchFrom163);
 
+        // 最终结果:`最快的`
+        cfFetch.thenAccept((result) -> {
+            System.out.println("price: " + result);
+        });
+        // 主线程不要立刻结束，否则CompletableFuture默认使用的线程池会立刻关闭:
+        Thread.sleep(200);
+    }
+
+    static String queryCode(String name, String url) {
+        System.out.println("query code from " + url + "...");
+        try {
+            Thread.sleep((long) (Math.random() * 100));
+        } catch (InterruptedException e) {
+        }
+        return "601857";
+    }
+
+    static Double fetchPrice(String code, String url) {
+        System.out.println("query price from " + url + "...");
+        try {
+            Thread.sleep((long) (Math.random() * 100));
+        } catch (InterruptedException e) {
+        }
+        return 5 + Math.random() * 20;
+    }
+}
+
+```
+
+断点调试技巧：step into、step into.......resume program、step into、step into....
+
+之所以需要`resume program`是因为产生了新的任务，需要线程池继续调度，而这个任务可能由原来的线程执行，也可能由另一个线程执行。IDEA编辑器，debugger看到的是“当前正在执行任务的线程”，而不是线程池里的全部线程。
 
 
 
