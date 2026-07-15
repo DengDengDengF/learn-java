@@ -2646,5 +2646,80 @@ public class Main {
 
 之所以需要`resume program`是因为产生了新的任务，需要线程池继续调度，而这个任务可能由原来的线程执行，也可能由另一个线程执行。IDEA编辑器，debugger看到的是“当前正在执行任务的线程”，而不是线程池里的全部线程。
 
+#### 36.5.9使用ForkJoin，分治并行线程任务
 
+```java
+import java.util.Random;
+import java.util.concurrent.*;
 
+public class Main {
+    public static void main(String[] args) throws Exception {
+        // 创建2000个随机数组成的数组:
+        long[] array = new long[2000];
+        long expectedSum = 0;
+        for (int i = 0; i < array.length; i++) {
+            array[i] = random();
+            expectedSum += array[i];
+        }
+        System.out.println("Expected sum: " + expectedSum);
+        // fork/join:
+        ForkJoinTask<Long> task = new SumTask(array, 0, array.length);
+        long startTime = System.currentTimeMillis();
+        Long result = ForkJoinPool.commonPool().invoke(task);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Fork/join sum: " + result + " in " + (endTime - startTime) + " ms.");
+    }
+
+    static Random random = new Random(0);
+
+    static long random() {
+        return random.nextInt(10000);
+    }
+}
+
+class SumTask extends RecursiveTask<Long> {
+    static final int THRESHOLD = 500;
+    long[] array;
+    int start;
+    int end;
+
+    SumTask(long[] array, int start, int end) {
+        this.array = array;
+        this.start = start;
+        this.end = end;
+    }
+
+    @Override
+    protected Long compute() {
+        if (end - start <= THRESHOLD) {
+            // 如果任务足够小,直接计算:
+            long sum = 0;
+            for (int i = start; i < end; i++) {
+                sum += this.array[i];
+                // 故意放慢计算速度:
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                }
+            }
+            return sum;
+        }
+        // 任务太大,一分为二:
+        int middle = (end + start) / 2;
+        System.out.println(String.format("split %d~%d ==> %d~%d, %d~%d", start, end, start, middle, middle, end));
+        SumTask subtask1 = new SumTask(this.array, start, middle);
+        SumTask subtask2 = new SumTask(this.array, middle, end);
+        invokeAll(subtask1, subtask2);
+        Long subresult1 = subtask1.join();
+        Long subresult2 = subtask2.join();
+        Long result = subresult1 + subresult2;
+        System.out.println("result = " + subresult1 + " + " + subresult2 + " ==> " + result);
+        return result;
+    }
+}
+
+```
+
+**分治（Divide and Conquer）**：是一种算法思想，完全可以自己实现，和 `ForkJoinPool` 没有必然关系。
+
+**ForkJoinPool**：是一个专门为**递归分治 + 并行计算**设计的线程池，它提供了任务调度、工作窃取（Work Stealing）、`join()` 优化、负载均衡等机制，让分治算法能够高效利用多核 CPU。
