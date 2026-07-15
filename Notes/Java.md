@@ -2723,3 +2723,50 @@ class SumTask extends RecursiveTask<Long> {
 **分治（Divide and Conquer）**：是一种算法思想，完全可以自己实现，和 `ForkJoinPool` 没有必然关系。
 
 **ForkJoinPool**：是一个专门为**递归分治 + 并行计算**设计的线程池，它提供了任务调度、工作窃取（Work Stealing）、`join()` 优化、负载均衡等机制，让分治算法能够高效利用多核 CPU。
+
+#### 36.5.10 使用ThreadLocal 线程内部传参
+
+ThreadLocal线程内部传参共享。
+
+```java
+static ThreadLocal<User> threadLocalUser = new ThreadLocal<>();
+void processUser(user) {
+    try {
+        threadLocalUser.set(user); 
+        step1();
+        step2();
+        log();
+    } finally {
+        threadLocalUser.remove();
+    }
+}
+void step1() {
+    User u = threadLocalUser.get();
+    log();
+    printUser();
+}
+
+void step2() {
+    User u = threadLocalUser.get();
+    checkUser(u.id);
+}
+
+void log() {
+    User u = threadLocalUser.get();
+    println(u.name);
+}
+```
+
+使用结束后清除
+
+```java
+try {
+    threadLocalUser.set(user);
+    ...
+} finally {
+    threadLocalUser.remove();
+}
+也可以用`AutoCloseable`接口配合try (resource) {...}结构，让编译器自动为我们关闭。例
+```
+
+这是因为当前线程执行完相关代码后，很可能会被重新放入线程池中，如果`ThreadLocal`没有被清除，该线程执行其他代码时，会把上一次的状态带进去。
