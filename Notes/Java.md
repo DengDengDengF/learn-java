@@ -2782,3 +2782,23 @@ try {
 
 Java 虚拟线程借鉴了协程/async-await 的调度思想，和 JS Event Loop 在"等待即让出执行权，完成后恢复执行"这一点上非常相似。
 
+### 37.网络编程
+
+#### 37.1 TCP编程
+
+```java
+//针对客户端和服务端。 
+var writer = new BufferedWriter(new OutputStreamWriter(output, StandardCharsets.UTF_8));
+var reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8));
+...
+writer.write(s);//写入缓冲区
+writer.flush();//强制发送。
+...
+String resp = reader.readLine();//读取
+System.out.println("<<< " + resp);    
+```
+
+ 客户端，`InputStream`要`接受`，服务端`OutputStream`的`输出`。
+
+ 服务端，`InputStream`要`接受`，客户端`OutputStream`的`输出`
+
