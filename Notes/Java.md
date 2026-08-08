@@ -2802,3 +2802,23 @@ System.out.println("<<< " + resp);
 
  服务端，`InputStream`要`接受`，客户端`OutputStream`的`输出`
 
+#### 37.2 UDP编程
+
+```java
+//发送
+String cmd = new String[] { "date", "time", "datetime", "weather", "hello" }[i];
+byte[] data = cmd.getBytes();
+packet = new DatagramPacket(data, data.length);
+ds.send(packet);
+```
+
+`字符串`转`字节数组`,创建一个UDP数据包,发送
+
+```java
+//接收
+byte[] buffer = new byte[1024];
+packet = new DatagramPacket(buffer, buffer.length);
+ds.receive(packet);
+```
+
+准备缓冲区,创建 UDP 数据包对象,接收
