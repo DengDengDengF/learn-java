@@ -3346,6 +3346,20 @@ n2.setText("Decorated");
 System.out.println(n2.getText());//<b><u><span>Decorated</span></u></b>
 ```
 
+##### 39.2.5 外观
 
+中介模式，让客户端只跟中介打交道，中介再去跟各个子系统打交道，对客户端来说就比较简单
+
+<img src="https://files.seeusercontent.com/2026/08/29/mJ5y/pasted-image-1787988815958.webp" alt="pasted-image-1787988815958.webp" style="zoom:50%;" />
+
+##### 39.2.6 享元
+
+缓存
+
+##### 39.2.7代理
+
+Proxy模式让调用者认为获取到的是核心类接口，但实际上是代理类。
+
+参考 JDBC懒链接+池化.md
 
 #### 39.3 行为型模式
