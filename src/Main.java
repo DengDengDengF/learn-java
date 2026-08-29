@@ -1,85 +1,65 @@
 import java.util.*;
 import java.util.stream.*;
-interface Node {
-    Node add(Node node);
-    List<Node> children();
-    String toXml();
+
+interface TextNode {
+    // 设置text:
+    void setText(String text);
+
+    // 获取text:
+    String getText();
 }
-class ElementNode implements Node {
-    private String name;
-    private List<Node> list = new ArrayList<>();
 
-    public ElementNode(String name) {
-        this.name = name;
-    }
-
-    public Node add(Node node) {
-        list.add(node);
-        return this;
-    }
-
-    public List<Node> children() {
-        return list;
-    }
-
-    public String toXml() {
-        String start = "<" + name + ">\n";
-        String end = "</" + name + ">\n";
-        StringJoiner sj = new StringJoiner("", start, end);
-        list.forEach(node -> {
-            sj.add(node.toXml() + "\n");
-        });
-        return sj.toString();
-    }
-}
-class TextNode implements Node {
+class SpanNode implements TextNode {
     private String text;
 
-    public TextNode(String text) {
+    public void setText(String text) {
         this.text = text;
     }
 
-    public Node add(Node node) {
-        throw new UnsupportedOperationException();
-    }
-
-    public List<Node> children() {
-        return List.of();
-    }
-
-    public String toXml() {
-        return text;
+    public String getText() {
+        return "<span>" + text + "</span>";
     }
 }
-class CommentNode implements Node {
-    private String text;
 
-    public CommentNode(String text) {
-        this.text = text;
+abstract class NodeDecorator implements TextNode {
+    protected final TextNode target;
+
+    protected NodeDecorator(TextNode target) {
+        this.target = target;
     }
 
-    public Node add(Node node) {
-        throw new UnsupportedOperationException();
-    }
-
-    public List<Node> children() {
-        return List.of();
-    }
-
-    public String toXml() {
-        return "<!-- " + text + " -->";
+    public void setText(String text) {
+        this.target.setText(text);
     }
 }
+
+class BoldDecorator extends NodeDecorator {
+    public BoldDecorator(TextNode target) {
+        super(target);
+    }
+
+    public String getText() {
+        return "<b>" + target.getText() + "</b>";
+    }
+}
+
+class UnderlineDecorator extends NodeDecorator {
+    public UnderlineDecorator(TextNode target) {
+        super(target);
+    }
+
+    public String getText() {
+        return "<u>" + target.getText() + "</u>";
+    }
+}
+
 public class Main {
     public static void main(String[] args) {
-        Node root = new ElementNode("school");
-        root.add(new ElementNode("classA")
-                .add(new TextNode("Tom"))
-                .add(new TextNode("Alice")));
-        root.add(new ElementNode("classB")
-                .add(new TextNode("Bob"))
-                .add(new TextNode("Grace"))
-                .add(new CommentNode("comment...")));
-        System.out.println(root.toXml());
+        TextNode n1 = new SpanNode();
+        n1.setText("Hello");
+        System.out.println(n1.getText());
+        TextNode n2 = new BoldDecorator(new UnderlineDecorator(new SpanNode()));
+        n2.setText("Decorated");
+        System.out.println(n2.getText());
     }
 }

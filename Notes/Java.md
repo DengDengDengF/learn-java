@@ -3291,4 +3291,61 @@ class CommentNode implements Node {
         System.out.println(root.toXml());
 ```
 
+##### 39.2.4 装饰器
+
+运行期动态给某个对象的实例增加功能的方法
+
+<img src="https://files.seeusercontent.com/2026/08/29/bE2u/pasted-image-1787987873635.webp" alt="pasted-image-1787987873635.webp" style="zoom:50%;" />
+
+```java
+public interface TextNode {
+    // 设置text:
+    void setText(String text);
+    // 获取text:
+    String getText();
+}
+public class SpanNode implements TextNode {
+    private String text;
+    public void setText(String text) {
+        this.text = text;
+    }
+    public String getText() {
+        return "<span>" + text + "</span>";
+    }
+}
+public abstract class NodeDecorator implements TextNode {
+    protected final TextNode target;
+    protected NodeDecorator(TextNode target) {
+        this.target = target;
+    }
+    public void setText(String text) {
+        this.target.setText(text);
+    }
+}
+public class BoldDecorator extends NodeDecorator {
+    public BoldDecorator(TextNode target) {
+        super(target);
+    }
+    public String getText() {
+        return "<b>" + target.getText() + "</b>";
+    }
+}
+public class UnderlineDecorator extends NodeDecorator {
+    public UnderlineDecorator(TextNode target) {
+        super(target);
+    }
+    public String getText() {
+        return "<u>" + target.getText() + "</u>";
+    }
+}
+TextNode n1 = new SpanNode();
+n1.setText("Hello");
+System.out.println(n1.getText());//<span>Hello</span>
+TextNode n2 = new BoldDecorator(new UnderlineDecorator(new SpanNode()));
+n2.setText("Decorated");
+System.out.println(n2.getText());//<b><u><span>Decorated</span></u></b>
+```
+
+
+
 #### 39.3 行为型模式
