@@ -1,67 +1,85 @@
 import java.util.*;
 import java.util.stream.*;
-
-interface Engine {
-    void start();
+interface Node {
+    Node add(Node node);
+    List<Node> children();
+    String toXml();
 }
+class ElementNode implements Node {
+    private String name;
+    private List<Node> list = new ArrayList<>();
 
-abstract class Car {
-    protected Engine engine;
-    public Car(Engine engine) {
-        this.engine = engine;
-    }
-    public abstract void drive();
-}
-
-abstract class RefinedCar extends Car {
-    protected Engine engine;
-    public RefinedCar(Engine engine) {
-        super(engine);
-    }
-    public void drive() {
-        this.engine.start();
-        System.out.println("Drive " + getBrand() + " car...");
-    }
-    public abstract String getBrand();
-}
-
-class BossCar extends RefinedCar {
-    public BossCar(Engine engine) {
-        super(engine);
+    public ElementNode(String name) {
+        this.name = name;
     }
 
-    public String getBrand() {
-        return "Boss";
+    public Node add(Node node) {
+        list.add(node);
+        return this;
+    }
+
+    public List<Node> children() {
+        return list;
+    }
+
+    public String toXml() {
+        String start = "<" + name + ">\n";
+        String end = "</" + name + ">\n";
+        StringJoiner sj = new StringJoiner("", start, end);
+        list.forEach(node -> {
+            sj.add(node.toXml() + "\n");
+        });
+        return sj.toString();
     }
 }
+class TextNode implements Node {
+    private String text;
 
-class SuperCar extends RefinedCar {
-    public SuperCar(Engine engine) {
-        super(engine);
+    public TextNode(String text) {
+        this.text = text;
     }
 
-    public String getBrand() {
-        return "Super";
+    public Node add(Node node) {
+        throw new UnsupportedOperationException();
     }
-}
 
-class HybridEngine implements Engine {
-    public void start() {
-        System.out.println("Boss Engine");
+    public List<Node> children() {
+        return List.of();
     }
-}
 
-class SuperEngine implements Engine {
-    public void start() {
-        System.out.println("Super Engine");
+    public String toXml() {
+        return text;
     }
 }
+class CommentNode implements Node {
+    private String text;
 
+    public CommentNode(String text) {
+        this.text = text;
+    }
+
+    public Node add(Node node) {
+        throw new UnsupportedOperationException();
+    }
+
+    public List<Node> children() {
+        return List.of();
+    }
+
+    public String toXml() {
+        return "<!-- " + text + " -->";
+    }
+}
 public class Main {
     public static void main(String[] args) {
-        RefinedCar car = new BossCar(new HybridEngine());
-        car.drive();
-        RefinedCar car2 =new SuperCar(new SuperEngine());
-        car2.drive();
+        Node root = new ElementNode("school");
+        root.add(new ElementNode("classA")
+                .add(new TextNode("Tom"))
+                .add(new TextNode("Alice")));
+        root.add(new ElementNode("classB")
+                .add(new TextNode("Bob"))
+                .add(new TextNode("Grace"))
+                .add(new CommentNode("comment...")));
+        System.out.println(root.toXml());
     }
 }

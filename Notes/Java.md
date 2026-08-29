@@ -3215,6 +3215,80 @@ RefinedCar car2 =new SuperCar(new SuperEngine());
 car2.drive();
 ```
 
+##### 39.2.3 组合
 
+*将对象组合成树形结构以表示“部分-整体”的层次结构，使得用户对单个对象和组合对象的使用具有一致性。*
+
+<img src="https://files.seeusercontent.com/2026/08/29/xvW9/pasted-image-1787986484953.webp" alt="pasted-image-1787986484953.webp" style="zoom:50%;" />
+
+```java
+interface Node {
+    Node add(Node node);
+    List<Node> children();
+    String toXml();
+}
+class ElementNode implements Node {
+    private String name;
+    private List<Node> list = new ArrayList<>();
+    public ElementNode(String name) {
+        this.name = name;
+    }
+    public Node add(Node node) {
+        list.add(node);
+        return this;
+    }
+    public List<Node> children() {
+        return list;
+    }
+    public String toXml() {
+        String start = "<" + name + ">\n";
+        String end = "</" + name + ">\n";
+        StringJoiner sj = new StringJoiner("", start, end);
+        list.forEach(node -> {
+            sj.add(node.toXml() + "\n");
+        });
+        return sj.toString();
+    }
+}
+class TextNode implements Node {
+    private String text;
+    public TextNode(String text) {
+        this.text = text;
+    }
+    public Node add(Node node) {
+        throw new UnsupportedOperationException();
+    }
+    public List<Node> children() {
+        return List.of();
+    }
+    public String toXml() {
+        return text;
+    }
+}
+class CommentNode implements Node {
+    private String text;
+    public CommentNode(String text) {
+        this.text = text;
+    }
+    public Node add(Node node) {
+        throw new UnsupportedOperationException();
+    }
+    public List<Node> children() {
+        return List.of();
+    }
+    public String toXml() {
+        return "<!-- " + text + " -->";
+    }
+}
+     Node root = new ElementNode("school");
+        root.add(new ElementNode("classA")
+                .add(new TextNode("Tom"))
+                .add(new TextNode("Alice")));
+        root.add(new ElementNode("classB")
+                .add(new TextNode("Bob"))
+                .add(new TextNode("Grace"))
+                .add(new CommentNode("comment...")));
+        System.out.println(root.toXml());
+```
 
 #### 39.3 行为型模式
