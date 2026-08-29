@@ -2887,3 +2887,334 @@ B版本不对,重试
 
 ```
 
+### 39.设计模式
+
+#### 39.1 创建型模式
+
+##### 39.1.1 工厂方法
+
+调用方只依赖抽象类型，不直接写 new 具体类()；具体创建逻辑由工厂或子类负责。
+
+```java
+public interface NumberFactory {
+    Number parse(String s);
+    static NumberFactory getFactory() {
+        return impl;
+    }
+    static NumberFactory impl = new NumberFactoryImpl();
+}
+public class NumberFactoryImpl implements NumberFactory {
+    public Number parse(String s) {
+        return new BigDecimal(s);
+    }
+}
+NumberFactory factory = NumberFactory.getFactory();
+Number result = factory.parse("123.456");
+```
+
+##### 39.1.2 抽象工厂
+
+提供一个统一接口，用来创建一整套相互关联、彼此兼容的对象，而不暴露具体实现类。
+
+```java
+  interface Button {
+      void render();
+  }
+
+  interface TextField {
+      void render();
+  }
+  interface UIFactory {
+      Button createButton();
+      TextField createTextField();
+  }
+  //windows 产品族
+  class WindowsFactory implements UIFactory {
+      public Button createButton() {
+          return new WindowsButton();
+      }
+      public TextField createTextField() {
+          return new WindowsTextField();
+      }
+  }
+  //mac 产品族
+  class MacFactory implements UIFactory {
+      public Button createButton() {
+          return new MacButton();
+      }
+      public TextField createTextField() {
+          return new MacTextField();
+      }
+  }
+ //业务代码
+ class Application {
+      private final Button button;
+      private final TextField textField;
+
+      Application(UIFactory factory) {
+          button = factory.createButton();
+          textField = factory.createTextField();
+      }
+  }
+```
+
+##### 39.1.3 生成器
+
+把复杂对象的构建过程拆成多个步骤，让调用方逐步设置参数，最后统一创建对象。
+
+```java
+  public class User {
+      private final String name;
+      private final int age;
+      private final String address;
+      private final boolean vip;
+
+      private User(Builder builder) {
+          this.name = builder.name;
+          this.age = builder.age;
+          this.address = builder.address;
+          this.vip = builder.vip;
+      }
+
+      public static Builder builder() {
+          return new Builder();
+      }
+
+      public static class Builder {
+          private String name;
+          private int age;
+          private String address;
+          private boolean vip;
+
+          public Builder name(String name) {
+              this.name = name;
+              return this;
+          }
+
+          public Builder age(int age) {
+              this.age = age;
+              return this;
+          }
+
+          public Builder address(String address) {
+              this.address = address;
+              return this;
+          }
+
+          public Builder vip(boolean vip) {
+              this.vip = vip;
+              return this;
+          }
+
+          public User build() {
+              if (name == null || name.isBlank()) {
+                  throw new IllegalStateException("name 不能为空");
+              }
+              return new User(this);
+          }
+      }
+  }
+  // User user = new User("张三", 18, null, "北京", true); //可读太差
+  User user = User.builder()
+          .name("张三")
+          .age(18)
+          .address("北京")
+          .vip(true)
+          .build();
+```
+
+##### 39.1.4 原型
+
+不从零创建对象，而是复制一个已有对象，再按需修改。
+
+```java
+public class Student {
+    private int id;
+    private String name;
+    private int score;
+
+    public Student copy() {
+        Student std = new Student();
+        std.id = this.id;
+        std.name = this.name;
+        std.score = this.score;
+        return std;
+    }
+}
+```
+
+##### 39.1.5 单例
+
+ 保证一个类在程序运行期间只有一个实例，并提供统一的访问入口。
+
+```java
+ public enum ConfigManager {
+      INSTANCE;
+      public void load() {
+          System.out.println("加载配置");
+      }
+  }
+  ConfigManager.INSTANCE.load();
+```
+
+tips：这里双重检查为啥java不成立?
+
+```java
+public static Singleton getInstance() {
+      if (INSTANCE == null) {
+          synchronized (Singleton.class) {
+              if (INSTANCE == null) {
+                  INSTANCE = new Singleton();
+              }
+          }
+      }
+      return INSTANCE;
+}
+```
+
+对象创建大致分为三步:
+
+1. 分配内存
+  2. 初始化 Singleton 对象
+  3. 把内存地址赋给 INSTANCE
+
+JVM 可能重排成：
+
+1. 分配内存
+  2. 把地址赋给 INSTANCE
+  3. 初始化对象
+
+此时可能出现：
+
+ 1. 线程 A 给 INSTANCE 赋了地址，但对象还没初始化完成。
+  2. 线程 B 在外层发现 INSTANCE != null。
+  3. 线程 B 返回一个“半初始化”的对象。
+
+正确写法：
+
+```java
+  public final class Singleton {
+      private static volatile Singleton INSTANCE;
+      private Singleton() {}
+      public static Singleton getInstance() {
+          if (INSTANCE == null) {
+              synchronized (Singleton.class) {
+                  if (INSTANCE == null) {
+                      INSTANCE = new Singleton();
+                  }
+              }
+          }
+          return INSTANCE;
+      }
+  }
+```
+
+  volatile 在这里有两个作用：
+
+  - 禁止对象创建过程中的关键重排序
+  - 保证一个线程写入后，其他线程能够立即看到
+
+#### 39.2 结构型模式
+
+##### 39.2.1 适配器
+
+*将一个类的接口转换成客户希望的另外一个接口，使得原本由于接口不兼容而不能一起工作的那些类可以一起工作。*
+
+```java
+public class Task implements Callable<Long> {
+    private long num;
+    public Task(long num) {
+        this.num = num;
+    }
+    public Long call() throws Exception {
+        long r = 0;
+        for (long n = 1; n <= this.num; n++) {
+            r = r + n;
+        }
+        System.out.println("Result: " + r);
+        return r;
+    }
+}
+public class RunnableAdapter implements Runnable {
+    private Callable<?> callable;
+    public RunnableAdapter(Callable<?> callable) {
+        this.callable = callable;
+    }
+    public void run() {
+        try {
+            callable.call();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+}
+Callable<Long> callable = new Task(123450000L);
+Thread thread = new Thread(new RunnableAdapter(callable));
+thread.start();
+```
+
+##### 39.2.2 桥接
+
+*将抽象部分与它的实现部分分离，使它们都可以独立地变化。*
+
+```java
+//添加新发动机、新品牌，不影响其他的。
+//将发动机、和品牌实现剥离，各自改各自的
+interface Engine {
+    void start();
+}
+abstract class Car {
+    protected Engine engine;
+    public Car(Engine engine) {//子类通过super传上来了
+        this.engine = engine;
+    }
+    public abstract void drive();
+}
+abstract class RefinedCar extends Car {
+    public RefinedCar(Engine engine) {
+        super(engine);
+    }
+    public void drive() {
+        this.engine.start();
+        System.out.println("Drive " + getBrand() + " car...");
+    }
+    public abstract String getBrand();
+}
+//新的品牌
+class BossCar extends RefinedCar {
+    public BossCar(Engine engine) {
+        super(engine);
+    }
+    public String getBrand() {
+        return "Boss";
+    }
+}
+class SuperCar extends RefinedCar {
+    public SuperCar(Engine engine) {
+        super(engine);
+    }
+
+    public String getBrand() {
+        return "Super";
+    }
+}
+//新的引擎
+class HybridEngine implements Engine {
+    public void start() {
+        System.out.println("Boss Engine");
+    }
+}
+class SuperEngine implements Engine {
+    public void start() {
+        System.out.println("Super Engine");
+    }
+}
+RefinedCar car = new BossCar(new HybridEngine());
+car.drive();
+RefinedCar car2 =new SuperCar(new SuperEngine());
+car2.drive();
+```
+
+
+
+#### 39.3 行为型模式
