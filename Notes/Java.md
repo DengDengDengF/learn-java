@@ -3707,3 +3707,45 @@ System.out.println(pay3);//10.50
 
 ```
 
+##### 39.3.10 模板方法
+
+定义一个操作的一系列步骤，对于某些暂时确定不下来的步骤，就留给子类去实现好了，这样不同的子类就可以定义出不同的步骤。
+
+例子：由于从数据库读取数据较慢，我们可以考虑把读取的设置缓存起来，这样下一次读取同样的key就不必再访问数据库了。但是怎么实现缓存，暂时没想好，但不妨碍我们先写出使用缓存的代码
+
+```java
+public abstract class AbstractSetting {
+    public final String getSetting(String key) {
+        String value = lookupCache(key);
+        if (value == null) {
+            value = readFromDatabase(key);
+            putIntoCache(key, value);
+        }
+        return value;
+    }
+    //暂时不确定的取/存
+    protected abstract String lookupCache(String key);
+    protected abstract void putIntoCache(String key, String value);
+}
+
+public class RedisSetting extends AbstractSetting {
+    private RedisClient client = RedisClient.create("redis://localhost:6379");
+    protected String lookupCache(String key) {
+        try (StatefulRedisConnection<String, String> connection = client.connect()) {
+            RedisCommands<String, String> commands = connection.sync();
+            return commands.get(key);
+        }
+    }
+    protected void putIntoCache(String key, String value) {
+        try (StatefulRedisConnection<String, String> connection = client.connect()) {
+            RedisCommands<String, String> commands = connection.sync();
+            commands.set(key, value);
+        }
+    }
+}
+
+AbstractSetting setting2 = new RedisSetting();
+System.out.println("autosave = " + setting2.getSetting("autosave"));
+System.out.println("autosave = " + setting2.getSetting("autosave"));
+```
+
