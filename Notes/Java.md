@@ -3363,3 +3363,101 @@ Proxy模式让调用者认为获取到的是核心类接口，但实际上是代
 参考 JDBC懒链接+池化.md
 
 #### 39.3 行为型模式
+
+##### 39.3.1 责任链
+
+设计`请求链`，A->B->C, 每个环节可以决定 `立刻结束` 或 `抛出错误` 或 `向下请求`
+
+```java
+     ┌─────────┐
+     │ Request │
+     └─────────┘
+          │
+┌ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ┐
+          ▼
+│  ┌─────────────┐  │
+   │ ProcessorA  │
+│  └─────────────┘  │
+          │
+│         ▼         │
+   ┌─────────────┐
+│  │ ProcessorB  │  │
+   └─────────────┘
+│         │         │
+          ▼
+│  ┌─────────────┐  │
+   │ ProcessorC  │
+│  └─────────────┘  │
+          │
+└ ─ ─ ─ ─ ┼ ─ ─ ─ ─ ┘
+          │
+          ▼
+```
+
+##### 39.3.2 命令
+
+命令模式的设计思想是把命令的`创建`和`执行`分离，使得调用者无需关心具体的执行过程。
+
+```java
+┌──────┐      ┌───────┐
+│Client│─ ─ ─▶│Command│
+└──────┘      └───────┘
+ (创建者)          │  ┌──────────────┐
+                  ├─▶│ CopyCommand  │
+                  │  ├──────────────┤
+                  │  │editor.copy() │─ ┐
+                  │  └──────────────┘
+                  │     （执行者）       │  ┌────────────┐
+                  │  ┌──────────────┐   ─▶│ TextEditor │
+                  └─▶│ PasteCommand │  │  └────────────┘
+                     ├──────────────┤
+                     │editor.paste()│─ ┘
+                     └──────────────┘
+                         （执行者）
+public interface Command {
+    void execute();
+}
+public class CopyCommand implements Command {
+    // 持有执行者对象:
+    private TextEditor receiver;
+    public CopyCommand(TextEditor receiver) {
+        this.receiver = receiver;
+    }
+    public void execute() {
+        receiver.copy();
+    }
+}
+
+public class PasteCommand implements Command {
+    private TextEditor receiver;
+    public PasteCommand(TextEditor receiver) {
+        this.receiver = receiver;
+    }
+    public void execute() {
+        receiver.paste();
+    }
+}
+public class TextEditor {
+    private StringBuilder buffer = new StringBuilder();
+    private String clipboard = "";
+    public void copy(String selectedText) {
+        clipboard = selectedText;  // 外部传入选中文本
+    }
+    public void paste() {
+        buffer.append(clipboard);
+    }
+    public String getState() {
+        return buffer.toString();
+    }
+}
+
+TextEditor editor = new TextEditor();
+editor.add("Command pattern in text editor.\n");
+Command copy = new CopyCommand(editor);
+copy.execute();
+editor.add("----\n");
+Command paste = new PasteCommand(editor);
+paste.execute();
+System.out.println(editor.getState());
+```
+
