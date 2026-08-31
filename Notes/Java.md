@@ -3541,6 +3541,17 @@ for (Iterator<String> it = list.iterator(); it.hasNext(); ) {
 *定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。*
 
 ```java
+┌─────────┐      ┌───────────────┐
+│  Store  │─ ─ ─▶│ProductObserver│
+└─────────┘      └───────────────┘
+     │                   ▲
+                         │
+     │             ┌─────┴─────┐
+     ▼             │           │
+┌─────────┐   ┌─────────┐ ┌─────────┐
+│ Product │   │  Admin  │ │Customer │ ...
+└─────────┘   └─────────┘ └─────────┘
+
 //任意加入被观察者
 public class Store {
     private List<ProductObserver> observers = new ArrayList<>();
@@ -3566,6 +3577,16 @@ public class Store {
         observers.forEach(o -> o.onPriceChanged(p));
     }
 }
+
+// observer:
+//Admin a = new Admin();
+//Customer c = new Customer();
+// store:
+//Store store = new Store();
+// 注册观察者:
+//store.addObserver(a);
+//store.addObserver(c);
+
 store.addObserver(new ProductObserver() {
     public void onPublished(Product product) {
         System.out.println("[Log] on product published: " + product);
@@ -3575,5 +3596,44 @@ store.addObserver(new ProductObserver() {
     }
 });
 
+```
+
+##### 39.3.8 状态
+
+状态不同，行为不同。
+
+```java
+interface State {
+      void handle();
+}
+
+class Open implements State {
+      public void handle() {
+          System.out.println("门已打开");
+      }
+}
+
+class Closed implements State {
+      public void handle() {
+          System.out.println("门已关闭");
+      }
+}
+
+class Door {
+      State state;
+
+      void run() {
+          state.handle();
+      }
+}
+//模拟随机 打开/关闭
+Random random = new Random();
+        Door door = new Door();
+        door.state = random.nextBoolean()
+                ? new Open()
+                : new Closed();
+        door.run();
+
+核心：切换状态对象，就能切换行为。    
 ```
 
