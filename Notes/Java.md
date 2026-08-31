@@ -3749,3 +3749,107 @@ System.out.println("autosave = " + setting2.getSetting("autosave"));
 System.out.println("autosave = " + setting2.getSetting("autosave"));
 ```
 
+##### 39.3.11 访问者
+
+访问者模式（Visitor）是一种操作一组对象的操作，它的目的是不改变对象的定义，但允许新增不同的访问者，来定义新的操作。
+
+`也可以说，核心算法不变，业务逻辑可扩展。`
+
+```java
+                         Client
+                           │
+                           │ 指定“怎么处理”
+                           ▼
+                    ┌───────────────┐
+                    │    Visitor    │
+                    ├───────────────┤
+                    │ visitDir()    │
+                    │ visitFile()   │
+                    └───────▲───────┘
+                            │
+              ┌─────────────┼─────────────┐
+              │             │             │
+              │             │             │
+     ┌────────┴───────┐ ┌───┴────────┐ ┌──┴────────────┐
+     │JavaFileVisitor │ │ImageVisitor│ │   ...Visitor  │
+     └────────────────┘ └────────────┘ └───────────────┘
+                 ▲         ▲              ▲
+                 │         │              │
+                 └─────────┼──────────────┘          
+                           ▲
+                           │ 某个visitor回调
+                           │
+                    ┌──────┴────────┐
+                    │ FileStructure │
+                    ├───────────────┤
+                    │ handle()      │
+                    │ scan()        │
+                    └───────┬───────┘
+                            │
+                         遍历结构
+                            │
+                    ┌───────┴────────┐
+                    │                │
+                 Directory          File
+                    │                │
+             visitDir(dir)   visitFile(file)
+
+interface Visitor {
+    // 访问文件夹:
+    void visitDir(File dir);
+    // 访问文件:
+    void visitFile(File file);
+}
+//文件对象的遍历算法不动
+class FileStructure {
+    File path;
+     public FileStructure(File file) {
+         this.path = file;
+     }
+
+     public void handle(Visitor visitor) {
+        scan(this.path, visitor);
+    }
+
+    private void scan(File file, Visitor visitor) {
+        if (file.isDirectory()) {
+            // 让访问者处理文件夹:
+            visitor.visitDir(file);
+            for (File sub : file.listFiles()) {
+                // 递归处理子文件夹:
+                scan(sub, visitor);
+            }
+        } else if (file.isFile()) {
+            // 让访问者处理文件:
+            visitor.visitFile(file);
+        }
+    }
+}
+//自定义访问者1
+ class JavaFileVisitor implements Visitor {
+    public void visitDir(File dir) {
+        System.out.println("Visit dir: " + dir);
+    }
+    public void visitFile(File file) {
+        if (file.getName().endsWith(".java")) {
+            System.out.println("Found java file: " + file);
+        }
+    }
+}
+//自定义访问者2
+class ImageVisitor implements Visitor{
+    public void visitDir(File dir) {
+        System.out.println("Visit dir: " + dir);
+    }
+    public void visitFile(File file) {
+        if (file.getName().endsWith(".img")) {
+            System.out.println("ready to use ffmpeg tools for  convert to hevc mode " + file);
+        }
+    }
+}
+//自定义访问者3
+//......
+FileStructure fs = new FileStructure(new File("."));
+fs.handle(new JavaFileVisitor());
+```
+
