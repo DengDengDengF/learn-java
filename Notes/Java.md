@@ -3467,5 +3467,17 @@ System.out.println(editor.getState());
 
 正则（动态规划，"a*: 匹配 >=  0, 个a "," b✔，ba✔，baa✔,bcd❌"....）、SQL解释
 
+##### 39.3.4 迭代器
 
+*提供一种方法顺序访问一个聚合对象中的各个元素，而又不需要暴露该对象的内部表示。*
+
+tips: 用了一个巨复杂的结构，这个结构做了很多优化，要遍历这个结构中的部分元素。
+
+```java
+List<String> list = ...
+for (Iterator<String> it = list.iterator(); it.hasNext(); ) {
+    String s = it.next();
+}
+//自行实现 迭代器的接口 要求，记录指针，指针移动。
+```
 
