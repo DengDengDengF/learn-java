@@ -3637,3 +3637,73 @@ Random random = new Random();
 核心：切换状态对象，就能切换行为。    
 ```
 
+##### 39.3.9 策略
+
+策略模式的核心思想是在一个计算方法中把容易变化的算法抽出来作为“策略”参数传进去，从而使得新增策略不必修改原有逻辑。
+
+- 以购物车结算为例，假设网站针对普通会员、Prime会员有`不同的折扣`，同时活动期间还有一个满100减20的活动，这些就可以作为策略实现.
+
+```java
+┌───────────────┐      ┌─────────────────┐
+│DiscountContext│─ ─ ─▶│DiscountStrategy │
+└───────────────┘      └─────────────────┘
+                                ▲
+                                │ ┌─────────────────────┐
+                                ├─│UserDiscountStrategy │
+                                │ └─────────────────────┘
+                                │ ┌─────────────────────┐
+                                ├─│PrimeDiscountStrategy│
+                                │ └─────────────────────┘
+                                │ ┌─────────────────────┐
+                                └─│OverDiscountStrategy │
+                                  └─────────────────────┘
+public interface DiscountStrategy {
+    // 计算折扣额度:
+    BigDecimal getDiscount(BigDecimal total);
+}
+//打9折
+public class UserDiscountStrategy implements DiscountStrategy {
+    public BigDecimal getDiscount(BigDecimal total) {
+        //打九折，保留两位小数，丢弃多余的小数位，不四舍五入，也不进位
+        return total.multiply(new BigDecimal("0.1")).setScale(2, RoundingMode.DOWN);
+    }
+}
+// 满100减20优惠:
+public class OverDiscountStrategy implements DiscountStrategy {
+    public BigDecimal getDiscount(BigDecimal total) {
+        return total.compareTo(BigDecimal.valueOf(100)) >= 0 ? BigDecimal.valueOf(20) : BigDecimal.ZERO;
+    }
+}
+//打1折
+class PrimeDiscountStrategy implements DiscountStrategy {
+    public BigDecimal getDiscount(BigDecimal total) {
+        return total.multiply(new BigDecimal("0.9")).setScale(2, RoundingMode.DOWN);
+    }
+}
+//应用策略
+public class DiscountContext {
+    private DiscountStrategy strategy = new UserDiscountStrategy();
+    public void setStrategy(DiscountStrategy strategy) {
+        this.strategy = strategy;
+    }
+    public BigDecimal calculatePrice(BigDecimal total) {
+        return total.subtract(this.strategy.getDiscount(total)).setScale(2);
+    }
+}
+
+
+DiscountContext ctx = new DiscountContext();
+// 默认使用普通会员折扣:
+BigDecimal pay1 = ctx.calculatePrice(BigDecimal.valueOf(105));
+System.out.println(pay1);//94.50
+// 使用满减折扣:
+ctx.setStrategy(new OverDiscountStrategy());
+BigDecimal pay2 = ctx.calculatePrice(BigDecimal.valueOf(105));
+System.out.println(pay2);//85.00
+//使用超级会员折扣：
+ctx.setStrategy(new PrimeDiscountStrategy());
+BigDecimal pay3 = ctx.calculatePrice(BigDecimal.valueOf(105));
+System.out.println(pay3);//10.50
+
+```
+
