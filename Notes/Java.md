@@ -3533,5 +3533,47 @@ for (Iterator<String> it = list.iterator(); it.hasNext(); ) {
 │              │
 │   恢复状态     │
 └──────────────┘
+ 拍快照 → 存快照 → 用快照恢复。
+```
+
+##### 39.3.7 观察者
+
+*定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。*
+
+```java
+//任意加入被观察者
+public class Store {
+    private List<ProductObserver> observers = new ArrayList<>();
+    private Map<String, Product> products = new HashMap<>();
+    // 注册观察者:
+    public void addObserver(ProductObserver observer) {
+        this.observers.add(observer);
+    }
+    // 取消注册:
+    public void removeObserver(ProductObserver observer) {
+        this.observers.remove(observer);
+    }
+    public void addNewProduct(String name, double price) {
+        Product p = new Product(name, price);
+        products.put(p.getName(), p);
+        // 通知观察者:
+        observers.forEach(o -> o.onPublished(p));
+    }
+    public void setProductPrice(String name, double price) {
+        Product p = products.get(name);
+        p.setPrice(price);
+        // 通知观察者:
+        observers.forEach(o -> o.onPriceChanged(p));
+    }
+}
+store.addObserver(new ProductObserver() {
+    public void onPublished(Product product) {
+        System.out.println("[Log] on product published: " + product);
+    }
+    public void onPriceChanged(Product product) {
+        System.out.println("[Log] on product price changed: " + product);
+    }
+});
+
 ```
 
