@@ -3481,3 +3481,14 @@ for (Iterator<String> it = list.iterator(); it.hasNext(); ) {
 //自行实现 迭代器的接口 要求，记录指针，指针移动。
 ```
 
+##### 39.3.5 中介
+
+中介模式（Mediator）又称调停者模式，它的目的是把多方会谈变成双方会谈，从而实现多方的松耦合。
+
+多方强耦合
+
+<img src="https://files.seeusercontent.com/2026/08/31/Klc1/pasted-image-1788147213583.webp" alt="pasted-image-1788147213583.webp" style="zoom:50%;" />
+
+加入中介后
+
+<img src="https://files.seeusercontent.com/2026/08/31/5xUo/pasted-image-1788147377974.webp" alt="pasted-image-1788147377974.webp" style="zoom:50%;" />
