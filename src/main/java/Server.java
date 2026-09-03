@@ -18,8 +18,18 @@ public class Server extends HttpServlet {
 
         Context context = tomcat.addContext("", System.getProperty("java.io.tmpdir"));
         Tomcat.addServlet(context, "helloServlet", new Server());
-        context.addServletMappingDecoded("/", "helloServlet");
-
+        context.addServletMappingDecoded("/hello", "helloServlet");
+        Tomcat.addServlet(context, "redirectServlet", new RedirectServlet());
+        context.addServletMappingDecoded("/hi", "redirectServlet");
+        Tomcat.addServlet(context, "forwardServlet", new ForwardServlet());
+        context.addServletMappingDecoded("/morning", "forwardServlet");
+        Tomcat.addServlet(context, "signInServlet", new SignInServlet());
+        context.addServletMappingDecoded("/signin", "signInServlet");
+        Tomcat.addServlet(context, "signOutServlet", new SignOutServlet());
+        context.addServletMappingDecoded("/signout", "signOutServlet");
+        Tomcat.addServlet(context, "indexServlet", new IndexServlet());
+        context.addServletMappingDecoded("/", "indexServlet");
+        context.addServletMappingDecoded("/index", "indexServlet");
         tomcat.start();
         System.out.printf("Server is running at http://localhost:%d/%n", PORT);
         tomcat.getServer().await();
@@ -29,7 +39,12 @@ public class Server extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType("text/html");
-        response.getWriter().write("<html><body><h1>Hello, world!</h1></body></html>");
+        response.setContentType("text/plain");
+
+        String name = request.getParameter("name");
+        if (name == null || name.isBlank()) {
+            name = "world";
+        }
+        response.getWriter().write("Hello " + name);
     }
 }
