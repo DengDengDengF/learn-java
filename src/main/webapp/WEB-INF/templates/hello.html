@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MVC Demo</title>
+  <link rel="icon" href="/static/mvc-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="page">
+    <p class="eyebrow">GET /hello</p>
+    <h1>Hello, {{ name }}!</h1>
+    <p>Pebble 已把 Controller 返回的 Model 渲染到这个页面。</p>
+    <dl>
+      <div><dt>age</dt><dd>{{ age }}</dd></div>
+      <div><dt>vip</dt><dd>{{ vip }}</dd></div>
+    </dl>
+    <nav>
+      <a class="button" href="/hello?name=Bob&age=28&vip=true">测试参数绑定</a>
+      <a href="/signin">进入登录 Demo</a>
+    </nav>
+  </main>
+</body>
+</html>

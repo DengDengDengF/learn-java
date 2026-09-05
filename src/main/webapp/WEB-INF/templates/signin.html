@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 - MVC Demo</title>
+  <link rel="icon" href="/static/mvc-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="page compact">
+    <p class="eyebrow">POST JSON /signin</p>
+    <h1>登录</h1>
+    {% if error %}<p class="error">{{ error }}</p>{% endif %}
+    <form id="signin-form">
+      <label>用户名<input name="username" value="admin" required></label>
+      <label>密码<input name="password" type="password" value="password" required></label>
+      <button type="submit">登录</button>
+    </form>
+    <p id="message" class="error" hidden></p>
+    <a href="/hello">返回 Hello</a>
+  </main>
+  <script>
+    document.querySelector('#signin-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const response = await fetch('/signin', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(Object.fromEntries(form))
+      });
+      if (response.redirected) {
+        location.href = response.url;
+        return;
+      }
+      document.open();
+      document.write(await response.text());
+      document.close();
+    });
+  </script>
+</body>
+</html>

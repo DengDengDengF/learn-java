@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>用户资料 - MVC Demo</title>
+  <link rel="icon" href="/static/mvc-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+  <main class="page compact">
+    <p class="eyebrow">GET /user/profile</p>
+    <h1>{{ user.username }}</h1>
+    <p>登录成功，Session 已注入 Controller，当前账号具有管理员权限。</p>
+    <a class="button" href="/signout">退出登录</a>
+  </main>
+</body>
+</html>
