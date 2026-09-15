@@ -2827,9 +2827,20 @@ public interface NumberFactory {
     static NumberFactory getFactory() {
         return impl;
     }
+    static NumberFactory getFactory2(){
+        return impl2
+    }
+    ......
     static NumberFactory impl = new NumberFactoryImpl();
+    static NumberFactory impl2 = new NumberFactoryImpl2();
+    ......
 }
 public class NumberFactoryImpl implements NumberFactory {
+    public Number parse(String s) {
+        return new BigDecimal(s);
+    }
+}
+public class NumberFactoryImpl2 implements NumberFactory{
     public Number parse(String s) {
         return new BigDecimal(s);
     }
@@ -3287,6 +3298,28 @@ System.out.println(n2.getText());//<b><u><span>Decorated</span></u></b>
 Proxy模式让调用者认为获取到的是核心类接口，但实际上是代理类。
 
 参考 JDBC懒链接+池化.md
+
+```js
+const realUserService = {
+    register(name) {
+        console.log(`真实注册：${name}`);
+    }
+};
+// 代理：调用方不直接访问真实对象，而是先通过代理对象。
+// 代理可以在不修改真实对象的情况下，在调用前后增加权限检查、日志等功能。
+const userServiceProxy = {
+    register(name) {
+        console.log("注册前：检查权限");
+
+        realUserService.register(name);
+
+        console.log("注册后：记录日志");
+    }
+};
+userServiceProxy.register("Tom");
+```
+
+
 
 #### 39.3 行为型模式
 
