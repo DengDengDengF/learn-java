@@ -2652,7 +2652,7 @@ class SumTask extends RecursiveTask<Long> {
 
 #### 36.5.10 使用ThreadLocal 线程内部传参
 
-ThreadLocal线程内部传参共享。
+ThreadLocal`当前线程`内部传参共享。
 
 ```java
 static ThreadLocal<User> threadLocalUser = new ThreadLocal<>();
@@ -2696,6 +2696,8 @@ try {
 ```
 
 这是因为当前线程执行完相关代码后，很可能会被重新放入线程池中，如果`ThreadLocal`没有被清除，该线程执行其他代码时，会把上一次的状态带进去。
+
+开启
 
 #### 36.5.11 虚拟线程
 
