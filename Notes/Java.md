@@ -2815,6 +2815,108 @@ B版本不对,重试
 
 ```
 
+#### 38.2 连表
+
+1.join
+
+```js
+ JOIN：有匹配就输出，没有匹配就不输出。
+const books = [
+    { id: 10, title: "西游记" },
+    { id: 20, title: "红楼梦" },
+    { id: 30, title: "三国演义" }
+  ];
+  const users = [
+    { id: 1, name: "张三" },
+    { id: 2, name: "李四" }
+  ];
+  const userBooks = [
+    { user_id: 1, book_id: 10 },
+    { user_id: 2, book_id: 10 },
+    { user_id: 1, book_id: 20 }
+  ];
+
+ SQL：
+  SELECT b.title, u.name
+  FROM books b
+  JOIN user_books ub ON ub.book_id = b.id
+  JOIN users u ON u.id = ub.user_id;
+
+ 按顺序遍历来理解，就相当于：
+  const result = [];
+  // FROM books b：遍历每本书
+  for (const b of books) {
+    // JOIN user_books ub：遍历关联表
+    for (const ub of userBooks) {
+      // ON ub.book_id = b.id：只保留关联到当前书的记录
+      if (ub.book_id !== b.id) {
+        continue;
+      }
+      // JOIN users u：遍历用户表
+      for (const u of users) {
+        // ON u.id = ub.user_id：只保留关联记录指向的用户
+        if (u.id !== ub.user_id) {
+          continue;
+        }
+        // SELECT b.title, u.name：取出两个字段，生成一行结果
+        result.push({
+          title: b.title,
+          name: u.name
+        });
+      }
+    }
+  }
+//遍历另一张表，条件匹配时继续往下执行
+```
+
+2.leftjoin
+
+```js
+ LEFT JOIN 是左连接：左边的记录一定保留，右边找不到匹配时，右边字段用 NULL 补齐。
+ 用两张表举例，假设每本书有一个 user_id：
+  const books = [
+    { id: 10, title: "西游记", user_id: 1 },
+    { id: 20, title: "红楼梦", user_id: 2 },
+    { id: 30, title: "三国演义", user_id: null }
+  ];
+  const users = [
+    { id: 1, name: "张三" },
+    { id: 2, name: "李四" }
+  ];
+ SQL：
+  SELECT b.title, u.name
+  FROM books b
+  LEFT JOIN users u ON u.id = b.user_id;
+
+ 这里 books 是左表，users 是右表。按顺序遍历来理解：
+  const result = [];
+  for (const b of books) {
+    let matched = false;
+    for (const u of users) {
+      // ON u.id = b.user_id
+      if (u.id !== b.user_id) {
+        continue;
+      }
+      matched = true;
+      result.push({
+        title: b.title,
+        name: u.name
+      });
+    }
+    // LEFT JOIN 的关键：
+    // 遍历完右表，仍然没有匹配，也要保留这本书
+    if (!matched) {
+      result.push({
+        title: b.title,
+        name: null
+      });
+    }
+  }
+  console.log(result);
+```
+
+
+
 ### 39*.设计模式
 
 #### 39.1 创建型模式
