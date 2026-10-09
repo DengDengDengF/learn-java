@@ -30,6 +30,9 @@ rabbitmqctl.bat clear_policy max-size
 # 内存分析
 rabbitmq-diagnostics.bat memory_breakdown
 
+# 查看监听端口
+rabbitmq-diagnostics listeners
+
 http://localhost:15672/#/
 交换机/队列，可以通过可视化控制台设置持久化。
 队列中的消息，可以通过spring amqp默认持久化。
